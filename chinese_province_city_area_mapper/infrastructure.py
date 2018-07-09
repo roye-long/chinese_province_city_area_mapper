@@ -5,13 +5,13 @@ Created on Sun Feb 25 00:55:14 2018
 @author: 燃烧杯
 """
 
-import jieba
+import jieba,re
 
 class Record:
     def __init__(self, line):
         from .domain import Location
         self.location = Location()
-        index_list=[]
+        index_dict={}
         #默认选取第一个遇到的省，市或者自治区
         for word in jieba.cut(line):
             if word == "上海市浦东新区":
@@ -25,10 +25,13 @@ class Record:
                 self.location.setPlace(word, word_type)
                 
                 word_max_index=line.rindex(word)
-                index_list.append(word_max_index)
-        maxindx=max(index_list)
-        reline=line[maxindx+3:]
-        reline=reline.replace('市','').replace('区','')
+                
+                index_dict[word_max_index]=len(word)
+        maxindx=max(list(index_dict.keys()))
+        reline=line[maxindx+index_dict[maxindx]:]
+        regx='[^\u4e00-\u9fa5 ,!?、，。！？\d\w]+'
+        parttern = re.compile(regx)
+        reline=parttern.sub('', reline)
         #print(reline)
         types=SuperMap.getType(reline)
         self.location.setPlace(reline, types)
