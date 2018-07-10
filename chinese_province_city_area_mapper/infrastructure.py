@@ -26,9 +26,9 @@ class Record:
                 word_max_index=line.rindex(word)
                 
                 index_dict[word_max_index]=len(word)
-        maxindx=max(list(index_dict.keys()))
+        maxindx=min(list(index_dict.keys()))
         reline=line[maxindx+index_dict[maxindx]:]
-        reline=reline.replace('省','').replace('市','').replace('区','').replace('县','')
+        #reline=reline.replace('省','').replace('市','').replace('区','').replace('县','')
         regx='[^\u4e00-\u9fa5 ,!?、，。！？\d\w]+'
         parttern = re.compile(regx)
         reline=parttern.sub('', reline)
