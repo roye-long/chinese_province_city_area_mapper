@@ -18,23 +18,23 @@ class Record:
                 self.location.setPlace("上海市", SuperMap.CITY)
                 self.location.setPlace("浦东新区", SuperMap.AREA)
                 continue
-            
-            word_type = SuperMap.getType(word)
-            
-            if word_type and word_type in ['area','city','provice'] :
-                self.location.setPlace(word, word_type)
+            newword,word_type= SuperMap.getType(word)
+            #print(word,word_type)
+            if word_type and word_type in ['area','city','province'] :
+                self.location.setPlace(newword, word_type)
                 
                 word_max_index=line.rindex(word)
                 
                 index_dict[word_max_index]=len(word)
         maxindx=max(list(index_dict.keys()))
         reline=line[maxindx+index_dict[maxindx]:]
+        reline=reline.replace('省','').replace('市','').replace('区','').replace('县','')
         regx='[^\u4e00-\u9fa5 ,!?、，。！？\d\w]+'
         parttern = re.compile(regx)
         reline=parttern.sub('', reline)
         #print(reline)
-        types=SuperMap.getType(reline)
-        self.location.setPlace(reline, types)
+        newreline,types=SuperMap.getType(reline)
+        self.location.setPlace(newreline, types)
     def pca_map(self, umap):
          return self.location.pca_map(umap)
             
@@ -57,12 +57,21 @@ class SuperMap:
     @classmethod
     def getType(cls, word):
         if cls.area_city_mapper.get(word):
-            return cls.AREA
-        if cls.city_province_mapper.get(word):
-            return cls.CITY
-        if cls.province_country_mapper.get(word):
-            return cls.PROVINCE
-        return cls.DETAIL
+            return (word,cls.AREA)
+        elif cls.city_province_mapper.get(word):
+            return (word,cls.CITY)
+        elif cls.province_country_mapper.get(word):
+            return (word,cls.PROVINCE)
+        elif cls.area_city_mapper.get(word+'区'):
+            return (word+'区',cls.AREA)
+        elif cls.area_city_mapper.get(word+'县'):
+            return (word+'县',cls.AREA)
+        elif cls.city_province_mapper.get(cls.fillCity(word)[0]):
+            return (cls.fillCity(word)[0],cls.CITY)
+        elif cls.city_province_mapper.get(cls.fillProvince(word)[0]):
+            return (cls.fillProvince(word)[0],cls.PROVINCE)
+        else:
+            return (word,cls.DETAIL)
     
     #如果将“北京市”简写作“北京”，则补全“市”字
     @classmethod
