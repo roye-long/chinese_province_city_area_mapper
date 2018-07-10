@@ -20,7 +20,7 @@ class Record:
                 continue
             newword,word_type= SuperMap.getType(word)
             #print(word,word_type)
-            if word_type and word_type in ['area','city','province'] :
+            if word_type and word_type in ['area','city','province','street'] :
                 self.location.setPlace(newword, word_type)
                 
                 word_max_index=line.rindex(word)
@@ -28,10 +28,16 @@ class Record:
                 index_dict[word_max_index]=len(word)
         
         if len(list(index_dict.keys()))>0:
+            #print(index_dict)
             minindx=min(list(index_dict.keys()))
             reline=line[minindx+index_dict[minindx]:]
         else:reline=line[0:]
-        
+        if reline.startswith('镇'):
+            reline=reline.replace('镇','',1)
+        elif reline.startswith('乡'):
+            reline=reline.replace('乡','',1)
+        elif reline.startswith('街'):
+            reline=reline.replace('街','',1)
         #reline=reline.replace('省','').replace('市','').replace('区','').replace('县','')
         regx='[^\u4e00-\u9fa5 ,!?、，。！？\d\w]+'
         parttern = re.compile(regx)
@@ -49,12 +55,13 @@ class Record:
 
 class SuperMap:
     from .mappers import area_city_mapper, city_province_mapper,\
-                        province_country_mapper, rep_areas, \
+                        province_country_mapper,street_area_mapper, rep_areas, \
                         lat_lon_mapper
     
     AREA = "area"
     CITY = "city"
     PROVINCE = "province"
+    STRRET='street'
     DETAIL='detail'
     rep_area_set = set()
     
@@ -70,6 +77,16 @@ class SuperMap:
             return (word+'区',cls.AREA)
         elif cls.area_city_mapper.get(word+'县'):
             return (word+'县',cls.AREA)
+        elif cls.street_area_mapper.get(word+'镇'):
+            return (word+'镇',cls.STRRET)
+        elif cls.street_area_mapper.get(word+'乡'):
+            return (word+'乡',cls.STRRET)
+        elif cls.street_area_mapper.get(word+'路'):
+            return (word+'路',cls.STRRET)
+        elif cls.street_area_mapper.get(word+'街'):
+            return (word+'街',cls.STRRET)
+        elif cls.street_area_mapper.get(word+'办'):
+            return (word+'办',cls.STRRET)
         elif cls.city_province_mapper.get(cls.fillCity(word)[0]):
             return (cls.fillCity(word)[0],cls.CITY)
         elif cls.city_province_mapper.get(cls.fillProvince(word)[0]):

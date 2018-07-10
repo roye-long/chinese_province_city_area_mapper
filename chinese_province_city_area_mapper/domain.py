@@ -17,6 +17,7 @@ class Location:
         self.city = City()
         self.area = Area()
         self.detail=Detail()
+        self.street=Street()
     def setPlace(self, name, place_type):
         if not hasattr(self, place_type):
             from .exceptions import PlaceTypeNotExistException
@@ -26,37 +27,69 @@ class Location:
             getattr(self, place_type).setPlace(name)
         
     def pca_map(self, umap):
-      
-        if self.area.isEmpty():
-            self.__city_and_province()
-        else:
-            if (self.area.name not in SuperMap.rep_areas) or (umap.get(self.area.name)):
-                if umap.get(self.area.name):
-                    tmp = umap.get(self.area.name)
-                else:
-                    tmp = SuperMap.area_city_mapper.get(self.area.name)
-                if self.city.isEmpty() or self.city.precision == 0:
-                    self.city.setPlace(tmp)
-                elif self.city.isNotEmpty() and self.city.precision == 1:
-                    if not self.area.isBlong(self.city.name) \
-                        and umap.get(self.area.name) != self.city.name:
-                        self.area.reset()
+        if self.street.isEmpty():
+            if self.area.isEmpty():
                 self.__city_and_province()
-            else:#重复区名 代码执行路径
-                import logging
-                SuperMap.rep_area_set.add(self.area.name)
-                logging.warning("在多个市存在相同区名-'" + self.area.name + \
-                                "'，最好在CPCATransformer的构造函数传入一个map指定其所属市")
-                if self.city.isNotEmpty():
+            else:
+                if (self.area.name not in SuperMap.rep_areas) or (umap.get(self.area.name)):
+                    if umap.get(self.area.name):
+                        tmp = umap.get(self.area.name)
+                    else:
+                        tmp = SuperMap.area_city_mapper.get(self.area.name)
+                    if self.city.isEmpty() or self.city.precision == 0:
+                        self.city.setPlace(tmp)
+                    elif self.city.isNotEmpty() and self.city.precision == 1:
+                        if not self.area.isBlong(self.city.name) \
+                            and umap.get(self.area.name) != self.city.name:
+                            self.area.reset()
                     self.__city_and_province()
-                    
+                else:#重复区名 代码执行路径
+                    import logging
+                    SuperMap.rep_area_set.add(self.area.name)
+                    logging.warning("在多个市存在相同区名-'" + self.area.name + \
+                                    "'，最好在CPCATransformer的构造函数传入一个map指定其所属市")
+                    if self.city.isNotEmpty():
+                        self.__city_and_province()
+        else:
+            if self.area.isEmpty():
+                if self.city.isEmpty():
+                    if self.province.isEmpty():
+                        self.area.name=SuperMap.street_area_mapper.get(self.street.name)
+                        self.city.name=SuperMap.area_city_mapper.get(self.area.name)
+                        self.province.name=SuperMap.city_province_mapper.get(self.city.name)
+                        #print(self.street.name)
+                        
+                else:
+                    self.__city_and_province()
+            else:
+                if (self.area.name not in SuperMap.rep_areas) or (umap.get(self.area.name)):
+                    if umap.get(self.area.name):
+                        tmp = umap.get(self.area.name)
+                    else:
+                        tmp = SuperMap.area_city_mapper.get(self.area.name)
+                    if self.city.isEmpty() or self.city.precision == 0:
+                        self.city.setPlace(tmp)
+                    elif self.city.isNotEmpty() and self.city.precision == 1:
+                        if not self.area.isBlong(self.city.name) \
+                            and umap.get(self.area.name) != self.city.name:
+                            self.area.reset()
+                    self.__city_and_province()
+                else:#重复区名 代码执行路径
+                    import logging
+                    SuperMap.rep_area_set.add(self.area.name)
+                    logging.warning("在多个市存在相同区名-'" + self.area.name + \
+                                    "'，最好在CPCATransformer的构造函数传入一个map指定其所属市")
+                    if self.city.isNotEmpty():
+                        self.__city_and_province()
+           
+                        
         if self.city.name.isdigit():
             self.city.reset()
         
         import pandas as pd
         #组装成DataFrame
         return pd.DataFrame({"省":[self.province.name], "市":[self.city.name], \
-                             "区":[self.area.name],'详细地址':[self.detail.name]})
+                             "区":[self.area.name],'街道/乡镇':[self.street.name],'详细地址':[self.detail.name]})
                         
     def __city_and_province(self):
         if self.city.isNotEmpty() and self.province.isNotEmpty():
@@ -137,6 +170,18 @@ class Detail(Place):
         
     def __getBlong(self):
         return SuperMap.area_city_mapper.get(self.name)
+        
+    def setPlace(self, name):
+        self.name = name
+        self.precision = 1
+        self.belong = self.__getBlong()
+class Street(Place):
+    
+    def __init__(self, name=""):
+        super().__init__()
+        
+    def __getBlong(self):
+        return SuperMap.street_area_mapper.get(self.name)
         
     def setPlace(self, name):
         self.name = name

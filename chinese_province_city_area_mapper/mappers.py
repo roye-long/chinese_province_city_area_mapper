@@ -1,4 +1,13 @@
 #数字表示直属于省
+import sys
+import os
+currentUrl = os.path.dirname(__file__)
+
+street_area_mapper={}
+with open(os.path.join(currentUrl,'data.csv'),'r',encoding='utf8') as fr:
+    for line in fr.readlines():
+        linelist=line.strip().split(',')
+        street_area_mapper[linelist[1]]=linelist[0]
 area_city_mapper = {
 '东城区':'北京市',
 '西城区':'北京市',
