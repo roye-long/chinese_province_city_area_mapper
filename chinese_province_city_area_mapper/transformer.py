@@ -29,3 +29,15 @@ class CPCATransformer:
         
         import pandas as pd
         return pd.concat(lines, ignore_index=True)
+    def transform_single_tolist(self, data):
+        from .infrastructure import SuperMap
+        SuperMap.rep_area_set = set()
+        data=str(data)
+        result=Record(data).pca_map(self.umap).values.tolist()[0]
+        
+        import logging
+        if len(SuperMap.rep_area_set) != 0:
+            logging.warning("建议添加到umap中的区有：" + str(SuperMap.rep_area_set))
+        
+        
+        return result
