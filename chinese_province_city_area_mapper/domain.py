@@ -54,10 +54,13 @@ class Location:
             if self.area.isEmpty():
                 if self.city.isEmpty():
                     if self.province.isEmpty():
-                        self.area.name=SuperMap.street_area_mapper.get(self.street.name)
-                        self.city.name=SuperMap.area_city_mapper.get(self.area.name)
-                        self.province.name=SuperMap.city_province_mapper.get(self.city.name)
-                        #print(self.street.name)
+                        if SuperMap.street_area_mapper.get(self.street.name):
+                            self.area.name=SuperMap.street_area_mapper.get(self.street.name)
+                        if SuperMap.area_city_mapper.get(self.area.name):
+                            self.city.name=SuperMap.area_city_mapper.get(self.area.name)
+                        if SuperMap.city_province_mapper.get(self.city.name):
+                            self.province.name=SuperMap.city_province_mapper.get(self.city.name)
+                            #print(self.street.name)
                         
                 else:
                     self.__city_and_province()
@@ -85,6 +88,12 @@ class Location:
                         
         if self.city.name.isdigit():
             self.city.reset()
+        if not self.province.name:
+            self.province.name=''
+        if not self.city.name:
+            self.city.name=''
+        if not self.area.name:
+            self.area.name=''
         
         import pandas as pd
         #组装成DataFrame

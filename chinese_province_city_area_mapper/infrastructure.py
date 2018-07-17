@@ -6,9 +6,13 @@ Created on Sun Feb 25 00:55:14 2018
 """
 
 import jieba,re
+import os
+currentUrl = os.path.dirname(__file__)
+jieba.load_userdict(os.path.join(currentUrl,'city_dict.txt'))
 
 class Record:
     def __init__(self, line):
+        
         from .domain import Location
         self.location = Location()
         index_dict={}
@@ -29,8 +33,8 @@ class Record:
         
         if len(list(index_dict.keys()))>0:
             #print(index_dict)
-            minindx=min(list(index_dict.keys()))
-            reline=line[minindx+index_dict[minindx]:]
+            maxindx=max(list(index_dict.keys()))
+            reline=line[maxindx+index_dict[maxindx]:]
         else:reline=line[0:]
         if reline.startswith('镇'):
             reline=reline.replace('镇','',1)
@@ -73,6 +77,8 @@ class SuperMap:
             return (word,cls.CITY)
         elif cls.province_country_mapper.get(word):
             return (word,cls.PROVINCE)
+        elif cls.street_area_mapper.get(word):
+            return (word,cls.STRRET)
         elif cls.area_city_mapper.get(word+'区'):
             return (word+'区',cls.AREA)
         elif cls.area_city_mapper.get(word+'县'):
@@ -87,6 +93,8 @@ class SuperMap:
             return (word+'街',cls.STRRET)
         elif cls.street_area_mapper.get(word+'办'):
             return (word+'办',cls.STRRET)
+        elif cls.area_city_mapper.get(word+'市'):
+            return (word+'市',cls.AREA)
         elif cls.city_province_mapper.get(cls.fillCity(word)[0]):
             return (cls.fillCity(word)[0],cls.CITY)
         elif cls.city_province_mapper.get(cls.fillProvince(word)[0]):
